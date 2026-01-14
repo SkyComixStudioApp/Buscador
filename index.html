@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador Gelbooru Robust 4:5</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #000;
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: white;
+        }
+        
+        #particles {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+        }
+        
+        .top-bar {
+            background-color: rgba(0, 0, 0, 0.95);
+            width: 100%;
+            padding: 10px 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo {
+            height: 35px;
+            margin-bottom: 12px;
+            display: block;
+        }
+        
+        /* Recuadro para buscador y etiquetas */
+        .search-box-container {
+            background-color: rgba(30, 30, 30, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border: 1px solid #444;
+        }
+        
+        .search-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 10px 18px 10px 40px;
+            border-radius: 22px;
+            border: 1px solid #555;
+            font-size: 15px;
+            background-color: #222;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: #666;
+            box-shadow: 0 0 0 2px rgba(100, 100, 100, 0.2);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 13px; top: 50%;
+            transform: translateY(-50%);
+            width: 16px; fill: #aaa;
+            pointer-events: none;
+        }
+
+        .search-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .option {
+            background-color: #333;
+            color: #ddd;
+            padding: 6px 14px;
+            border-radius: 18px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #444;
+        }
+        
+        .option:hover {
+            background-color: #444;
+            transform: translateY(-1px);
+        }
+
+        /* Recuadro para el filtro NSFW */
+        .nsfw-box-container {
+            background-color: rgba(30, 30, 30, 0.8);
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 1px solid #444;
+        }
+
+        .filter-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 0;
+        }
+
+        .filter-label { 
+            font-size: 12px; 
+            color: #ccc; 
+            font-weight: bold;
+            text-transform: uppercase; 
+            letter-spacing: 0.8px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 42px;
+            height: 20px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333;
+            transition: .4s;
+            border-radius: 22px;
+            border: 1px solid #555;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px; width: 14px;
+            left: 3px; bottom: 2px;
+            background-color: #ddd;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: #ff4d4d; }
+        input:checked + .slider:before { transform: translateX(20px); }
+        
+        /* CUADRÍCULA CON ASPECTO 4:5 - ALINEADA CON RECUADROS */
+        .results-wrapper {
+            max-width: 970px;
+            margin: 0 auto;
+            padding: 0 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .image-card {
+            width: 100%;
+            aspect-ratio: 4 / 5; /* Relación de aspecto 4x5 */
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #1a1a1a;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .skeleton {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+            background-size: 200% 100%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .image-result {
+            width: 100%;
+            height: 100%; /* Ocupa todo el alto del contenedor 4:5 */
+            object-fit: cover; /* Se adapta para llenar el espacio sin deformarse */
+            display: block;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        .image-result.loaded { opacity: 1; }
+
+        /* MODAL PARA VISUALIZACIÓN AMPLIADA */
+        .image-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 95vw;
+            max-height: 95vh;
+        }
+
+        .modal-image-container {
+            position: relative;
+            max-width: 100%;
+            max-height: 80vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-image {
+            max-width: 100%;
+            max-height: 80vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .close-modal {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 28px;
+            color: white;
+            z-index: 1002;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.1);
+        }
+
+        .download-hint {
+            position: fixed;
+            bottom: 13px;
+            left: 5px;
+            right: 5px;
+            color: #aaa;
+            font-size: 16px;
+            text-align: center;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            white-space: nowrap;
+            z-index: 1001;
+            box-sizing: border-box;
+            margin: 0;
+        }
+
+        #scrollLoading {
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            color: #4a90e2;
+            font-size: 12px;
+            display: none;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particles"></canvas>
+    
+    <div class="top-bar">
+        <img src="https://i.ibb.co/8nbrc06R/1768350301312.png" alt="Logo" class="logo">
+        
+        <!-- Recuadro para buscador y etiquetas -->
+        <div class="search-box-container">
+            <div class="search-container">
+                <svg class="search-icon" viewBox="0 0 24 24">
+                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+                <input type="text" class="search-box" id="searchInput" placeholder="Buscar...">
+            </div>
+
+            <div class="search-options">
+                <div class="option" data-tag="gravity_falls">Gravity Falls</div>
+                <div class="option" data-tag="amphibia">Amphibia</div>
+                <div class="option" data-tag="the_owl_house">The Owl House</div>
+                <div class="option" data-tag="the_simpsons">The Simpsons</div>
+                <div class="option" data-tag="star_vs_the_forces_of_evil">Star vs Evil</div>
+            </div>
+        </div>
+        
+        <!-- Recuadro separado para el filtro NSFW -->
+        <div class="nsfw-box-container">
+            <div class="filter-row">
+                <span class="filter-label">MOSTRAR SOLO CONTENIDO +18</span>
+                <label class="switch">
+                    <input type="checkbox" id="nsfwToggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+    
+    <div class="results-wrapper" id="resultsContainer"></div>
+    <div id="scrollLoading">Buscando imágenes incansablemente...</div>
+
+    <!-- Modal para visualización ampliada -->
+    <div class="image-modal" id="imageModal">
+        <div class="modal-content">
+            <div class="modal-image-container">
+                <img class="modal-image" id="modalImage" src="" alt="">
+            </div>
+        </div>
+        <div class="close-modal" id="closeModal">&times;</div>
+        <div class="download-hint">Deja presionado la imagen para descargar</div>
+    </div>
+
+    <script>
+        const API_KEY = '0d1c80b323399ab231cd442933527360d97c6fd54f57dc064cc26bada3ade9221f8579cf0a2f6cb265d553866d39b443f660ffae0a28d96c8fa6064ebb77ef72';
+        const USER_ID = '1895037';
+        const proxy = "https://api.codetabs.com/v1/proxy?quest=";
+        
+        const searchInput = document.getElementById('searchInput');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const nsfwToggle = document.getElementById('nsfwToggle');
+        const scrollLoading = document.getElementById('scrollLoading');
+        const imageModal = document.getElementById('imageModal');
+        const modalImage = document.getElementById('modalImage');
+        const closeModal = document.getElementById('closeModal');
+        
+        let currentPage = 0;
+        let currentTags = '';
+        let isFetching = false;
+        let endOfAllResults = false;
+        let currentImageUrl = '';
+
+        // Función para guardar el estado del NSFW en localStorage
+        function saveNsfwState() {
+            localStorage.setItem('gelbooru_nsfw_enabled', nsfwToggle.checked);
+        }
+
+        // Función para cargar el estado del NSFW desde localStorage
+        function loadNsfwState() {
+            const savedState = localStorage.getItem('gelbooru_nsfw_enabled');
+            if (savedState !== null) {
+                nsfwToggle.checked = savedState === 'true';
+            }
+        }
+
+        // Función de traducción automática y formato
+        async function translateAndFormat(text) {
+            let original = text.trim();
+            // Primero reemplazamos espacios por guiones bajos
+            let formatted = original.replace(/\s+/g, '_');
+            
+            try {
+                // Intentamos traducir del español al inglés
+                const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(original)}&langpair=es|en`);
+                const data = await res.json();
+                if(data.responseData && data.responseData.translatedText) {
+                    // Usamos la traducción y reemplazamos espacios por guiones bajos
+                    formatted = data.responseData.translatedText.trim().replace(/\s+/g, '_').toLowerCase();
+                }
+            } catch (e) { 
+                console.warn("Error en traducción, usando término original"); 
+            }
+            return formatted;
+        }
+
+        async function fetchUntilFull(targetCount, accumulatedResults = []) {
+            if (accumulatedResults.length >= targetCount || endOfAllResults) {
+                return accumulatedResults.slice(0, targetCount);
+            }
+
+            let finalTags = currentTags;
+            if (nsfwToggle.checked) finalTags += ' rating:explicit';
+            else finalTags += ' rating:general';
+
+            const url = `https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&tags=${encodeURIComponent(finalTags)}&api_key=${API_KEY}&user_id=${USER_ID}&limit=20&pid=${currentPage}`;
+            
+            try {
+                const response = await fetch(proxy + encodeURIComponent(url));
+                const data = await response.json();
+                const posts = data.post || [];
+
+                if (posts.length === 0) {
+                    endOfAllResults = true;
+                    return accumulatedResults;
+                }
+
+                currentPage++;
+                const newResults = [...accumulatedResults, ...posts];
+                
+                if (newResults.length < targetCount) {
+                    return await fetchUntilFull(targetCount, newResults);
+                }
+                
+                return newResults.slice(0, targetCount);
+
+            } catch (err) {
+                console.error("Error robusto:", err);
+                return accumulatedResults;
+            }
+        }
+
+        // Función para abrir la imagen en el modal
+        function openImageModal(imageUrl) {
+            currentImageUrl = imageUrl;
+            modalImage.src = imageUrl;
+            imageModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Previene scroll en fondo
+        }
+
+        // Función para cerrar el modal
+        function closeImageModal() {
+            imageModal.style.display = 'none';
+            document.body.style.overflow = 'auto'; // Restaura scroll
+        }
+
+        async function startSearch(tags, isNewSearch = true) {
+            if (isFetching) return;
+            isFetching = true;
+            scrollLoading.style.display = 'block';
+
+            if (isNewSearch) {
+                currentPage = 0;
+                endOfAllResults = false;
+                resultsContainer.innerHTML = '';
+                // Usamos la función de traducción para convertir el texto
+                currentTags = await translateAndFormat(tags);
+                console.log('Buscando con tags:', currentTags); // Para depuración
+            }
+
+            const items = await fetchUntilFull(10);
+            
+            if (items.length > 0) {
+                renderImages(items);
+            } else if (isNewSearch) {
+                resultsContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No se encontró nada.</p>';
+            }
+
+            scrollLoading.style.display = 'none';
+            isFetching = false;
+        }
+        
+        function renderImages(posts) {
+            posts.forEach(post => {
+                let imgUrl = post.sample_url || post.file_url;
+                if (!imgUrl) return;
+                if (!imgUrl.startsWith('http')) imgUrl = 'https:' + imgUrl;
+
+                const card = document.createElement('div');
+                card.className = 'image-card';
+                
+                const skeleton = document.createElement('div');
+                skeleton.className = 'skeleton';
+                card.appendChild(skeleton);
+
+                const img = new Image();
+                img.className = 'image-result';
+                img.src = imgUrl;
+
+                img.onload = () => {
+                    skeleton.remove();
+                    img.classList.add('loaded');
+                };
+                img.onerror = () => card.remove();
+                
+                // Evento para abrir imagen en modal
+                card.addEventListener('click', () => {
+                    openImageModal(imgUrl);
+                });
+                
+                card.appendChild(img);
+                resultsContainer.appendChild(card);
+            });
+        }
+
+        function initParticles() {
+            const canvas = document.getElementById('particles');
+            const ctx = canvas.getContext('2d');
+            let w, h, squares = [];
+            function resize() { w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+            window.addEventListener('resize', resize);
+            resize();
+            for(let i = 0; i < 70; i++) {
+                squares.push({
+                    x: Math.random() * w, y: Math.random() * h,
+                    size: Math.random() * 8 + 4,
+                    speed: Math.random() * 0.3 + 0.1,
+                    color: Math.random() > 0.5 ? '#1a1a1a' : '#0d0d0d',
+                    opacity: Math.random() * 0.4 + 0.2
+                });
+            }
+            function animate() {
+                ctx.clearRect(0, 0, w, h);
+                squares.forEach(s => {
+                    ctx.globalAlpha = s.opacity;
+                    ctx.fillStyle = s.color;
+                    ctx.fillRect(s.x, s.y, s.size, s.size);
+                    s.y -= s.speed;
+                    if(s.y < -20) { s.y = h + 20; s.x = Math.random() * w; }
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        }
+
+        // Eventos para el modal
+        closeModal.addEventListener('click', closeImageModal);
+        
+        // Cerrar modal al hacer clic fuera de la imagen
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal) {
+                closeImageModal();
+            }
+        });
+
+        // Cerrar modal con tecla ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && imageModal.style.display === 'flex') {
+                closeImageModal();
+            }
+        });
+
+        window.addEventListener('scroll', () => {
+            if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 800) {
+                startSearch(currentTags, false);
+            }
+        });
+
+        // Evento para búsqueda con Enter
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && searchInput.value.trim()) {
+                // Usamos el valor del input y lo traducimos/formateamos
+                startSearch(searchInput.value.trim());
+            }
+        });
+
+        // Evento para cambiar filtro NSFW
+        nsfwToggle.addEventListener('change', () => {
+            // Guardar el estado en localStorage
+            saveNsfwState();
+            
+            // Si hay texto en el buscador, usa ese, si no, usa los tags actuales
+            if (searchInput.value.trim()) {
+                startSearch(searchInput.value.trim());
+            } else if (currentTags) {
+                startSearch(currentTags);
+            }
+        });
+
+        // Eventos para opciones predefinidas
+        document.querySelectorAll('.option').forEach(opt => {
+            opt.addEventListener('click', () => {
+                // Mostramos el texto con espacios en el input
+                searchInput.value = opt.textContent;
+                // Usamos el data-tag que ya tiene guiones bajos
+                startSearch(opt.dataset.tag);
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cargar el estado del NSFW desde localStorage
+            loadNsfwState();
+            
+            initParticles();
+            startSearch('disney');
+        });
+    </script>
+</body>
+</html>
