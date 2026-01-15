@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buscador Gelbooru Robust 4:5</title>
     <style>
+        /* Eliminar recuadro azul de selección */
+        *, *:focus, *:active { 
+            outline: none !important; 
+            box-shadow: none !important; 
+            -webkit-tap-highlight-color: transparent !important; 
+        }
+        
         /* Importar fuente personalizada */
         @font-face {
             font-family: 'CustomFont';
@@ -17,6 +24,7 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'CustomFont', 'Segoe UI', Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent !important;
         }
         
         body {
@@ -24,6 +32,8 @@
             min-height: 100vh;
             overflow-x: hidden;
             color: white;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
         #particles {
@@ -74,6 +84,7 @@
             background-color: #111;
             color: white;
             transition: all 0.3s ease;
+            outline: none !important;
         }
         
         .search-box:focus {
@@ -109,6 +120,7 @@
             justify-content: center;
             border-radius: 50%;
             padding: 0;
+            outline: none !important;
         }
         
         .pin-btn:hover {
@@ -142,6 +154,8 @@
             cursor: pointer;
             transition: all 0.3s ease;
             border: 1px solid #333;
+            outline: none !important;
+            -webkit-tap-highlight-color: transparent !important;
         }
         
         .option:hover {
@@ -180,7 +194,12 @@
             height: 20px;
         }
 
-        .switch input { opacity: 0; width: 0; height: 0; }
+        .switch input { 
+            opacity: 0; 
+            width: 0; 
+            height: 0; 
+            outline: none !important;
+        }
 
         .slider {
             position: absolute;
@@ -241,6 +260,8 @@
             background-color: #0a0a0a;
             position: relative;
             cursor: pointer;
+            outline: none !important;
+            -webkit-tap-highlight-color: transparent !important;
         }
 
         .skeleton {
@@ -308,6 +329,8 @@
             border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             cursor: pointer;
+            outline: none !important;
+            -webkit-tap-highlight-color: transparent !important;
         }
 
         /* Botón de flecha para cerrar en la parte superior izquierda - MÁS PEQUEÑO */
@@ -326,6 +349,8 @@
             z-index: 1002;
             transition: all 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            outline: none !important;
+            -webkit-tap-highlight-color: transparent !important;
         }
 
         .close-arrow-btn:hover {
@@ -399,6 +424,8 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            outline: none !important;
+            -webkit-tap-highlight-color: transparent !important;
         }
 
         .modal-tag:hover {
