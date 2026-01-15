@@ -5,11 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Buscador Gelbooru Robust 4:5</title>
     <style>
+        /* Importar fuente personalizada */
+        @font-face {
+            font-family: 'CustomFont';
+            src: url('https://res.cloudinary.com/dcxfj6ij9/raw/upload/v1708493518/XWallpaper/Fuente/mohnlubogt1mepgeifcn.ttf') format('truetype');
+            font-display: swap;
+        }
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'CustomFont', 'Segoe UI', Arial, sans-serif;
         }
         
         body {
@@ -36,40 +43,42 @@
         }
         
         .logo {
-            height: 40px;
+            height: 35px;
             margin-bottom: 12px;
             display: block;
         }
         
-        /* Recuadro para buscador y etiquetas */
+        /* Recuadro para buscador y etiquetas - MÁS OSCURO */
         .search-box-container {
-            background-color: rgba(30, 30, 30, 0.8);
+            background-color: rgba(5, 5, 5, 0.95);
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 12px;
-            border: 1px solid #444;
+            border: 1px solid #222;
         }
         
         .search-container {
             position: relative;
             width: 100%;
             margin-bottom: 12px;
+            display: flex;
+            align-items: center;
         }
         
         .search-box {
             width: 100%;
             padding: 10px 18px 10px 40px;
             border-radius: 22px;
-            border: 1px solid #555;
+            border: 1px solid #333;
             font-size: 15px;
-            background-color: #222;
+            background-color: #111;
             color: white;
             transition: all 0.3s ease;
         }
         
         .search-box:focus {
             outline: none;
-            border-color: #666;
+            border-color: #444;
             box-shadow: 0 0 0 2px rgba(100, 100, 100, 0.2);
         }
         
@@ -77,8 +86,45 @@
             position: absolute;
             left: 13px; top: 50%;
             transform: translateY(-50%);
-            width: 16px; fill: #aaa;
+            width: 16px; fill: #777;
             pointer-events: none;
+        }
+
+        /* Botón para fijar búsqueda con icono SVG */
+        .pin-btn {
+            position: absolute;
+            right: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #777;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            padding: 0;
+        }
+        
+        .pin-btn:hover {
+            color: #ff4d4d;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-50%) scale(1.1);
+        }
+        
+        .pin-btn.pinned {
+            color: #ff4d4d;
+        }
+
+        .pin-icon {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
         }
 
         .search-options {
@@ -88,27 +134,27 @@
         }
         
         .option {
-            background-color: #333;
-            color: #ddd;
+            background-color: #222;
+            color: #ccc;
             padding: 6px 14px;
             border-radius: 18px;
             font-size: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
-            border: 1px solid #444;
+            border: 1px solid #333;
         }
         
         .option:hover {
-            background-color: #444;
+            background-color: #333;
             transform: translateY(-1px);
         }
 
-        /* Recuadro para el filtro NSFW */
+        /* Recuadro para el filtro NSFW - MÁS OSCURO */
         .nsfw-box-container {
-            background-color: rgba(30, 30, 30, 0.8);
+            background-color: rgba(5, 5, 5, 0.95);
             border-radius: 10px;
-            padding: 12px 15px;
-            border: 1px solid #444;
+            padding: 12px 15px 10px 15px;
+            border: 1px solid #222;
         }
 
         .filter-row {
@@ -116,11 +162,12 @@
             justify-content: space-between;
             align-items: center;
             padding: 3px 0;
+            margin-bottom: 8px;
         }
 
         .filter-label { 
             font-size: 12px; 
-            color: #ccc; 
+            color: #aaa; 
             font-weight: bold;
             text-transform: uppercase; 
             letter-spacing: 0.8px;
@@ -139,10 +186,10 @@
             position: absolute;
             cursor: pointer;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #333;
+            background-color: #222;
             transition: .4s;
             border-radius: 22px;
-            border: 1px solid #555;
+            border: 1px solid #333;
         }
 
         .slider:before {
@@ -150,13 +197,31 @@
             content: "";
             height: 14px; width: 14px;
             left: 3px; bottom: 2px;
-            background-color: #ddd;
+            background-color: #aaa;
             transition: .4s;
             border-radius: 50%;
         }
 
         input:checked + .slider { background-color: #ff4d4d; }
         input:checked + .slider:before { transform: translateX(20px); }
+        
+        /* Línea separadora debajo del filtro NSFW */
+        .nsfw-separator {
+            width: 100%;
+            height: 1px;
+            background-color: #333;
+            margin: 8px 0 10px 0;
+        }
+        
+        /* Texto informativo - ALINEADO A LA IZQUIERDA Y MÁS GRANDE */
+        .info-text {
+            font-size: 13px;
+            color: #bbb;
+            text-align: left;
+            line-height: 1.4;
+            letter-spacing: 0.3px;
+            padding-left: 2px;
+        }
         
         /* CUADRÍCULA CON ASPECTO 4:5 - ALINEADA CON RECUADROS */
         .results-wrapper {
@@ -173,7 +238,7 @@
             aspect-ratio: 4 / 5; /* Relación de aspecto 4x5 */
             border-radius: 10px;
             overflow: hidden;
-            background-color: #1a1a1a;
+            background-color: #0a0a0a;
             position: relative;
             cursor: pointer;
         }
@@ -181,7 +246,7 @@
         .skeleton {
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, #1a1a1a 25%, #2a2a2a 50%, #1a1a1a 75%);
+            background: linear-gradient(90deg, #0a0a0a 25%, #1a1a1a 50%, #0a0a0a 75%);
             background-size: 200% 100%;
             animation: pulse 1.5s infinite;
         }
@@ -193,7 +258,7 @@
         
         .image-result {
             width: 100%;
-            height: 100%; /* Ocupa todo el alto del contenedor 4:5 */
+            height: 100%; /* Ocupa todo el alto del contenedor 4x5 */
             object-fit: cover; /* Se adapta para llenar el espacio sin deformarse */
             display: block;
             opacity: 0;
@@ -210,10 +275,9 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.95);
+            background-color: rgba(0, 0, 0, 0.98);
             z-index: 1000;
-            justify-content: center;
-            align-items: center;
+            overflow-y: auto;
             padding: 20px;
         }
 
@@ -221,71 +285,126 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             width: 100%;
             max-width: 95vw;
-            max-height: 95vh;
+            margin: 0 auto;
+            padding: 60px 0 30px 0;
         }
 
         .modal-image-container {
             position: relative;
             max-width: 100%;
-            max-height: 80vh;
+            max-height: 70vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 25px;
         }
 
         .modal-image {
             max-width: 100%;
-            max-height: 80vh;
+            max-height: 70vh;
             object-fit: contain;
             border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            cursor: pointer;
         }
 
-        .close-modal {
+        /* Botón de flecha para cerrar en la parte superior izquierda - MÁS PEQUEÑO */
+        .close-arrow-btn {
             position: fixed;
-            top: 12px;
-            right: 12px;
-            width: 45px;
-            height: 45px;
-            background: rgba(255, 255, 255, 0.15);
+            top: 15px;
+            left: 15px;
+            width: 40px; /* Más pequeño */
+            height: 40px; /* Más pequeño */
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 28px;
-            color: white;
             z-index: 1002;
             transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .close-modal:hover {
-            background: rgba(255, 255, 255, 0.25);
+        .close-arrow-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
             transform: scale(1.1);
         }
 
-        .download-hint {
-            position: fixed;
-            bottom: 13px;
-            left: 15px;
-            right: 15px;
+        .arrow-icon {
+            width: 20px; /* Más pequeño */
+            height: 20px; /* Más pequeño */
+            fill: white;
+            transform: rotate(180deg);
+        }
+
+        /* SECCIÓN DE ETIQUETAS DEBAJO DE LA IMAGEN - SIN RECUADRO */
+        .tags-section {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 5px;
+        }
+
+        .tags-header {
+            font-size: 14px;
             color: #aaa;
-            font-size: 16px;
-            text-align: center;
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .tags-header span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tags-count {
+            background-color: #333;
+            color: #ccc;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .tags-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 0 2px;
+        }
+
+        /* Etiquetas con colores originales */
+        .modal-tag {
+            background-color: #222;
+            color: #ccc;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #333;
+            display: inline-block;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
             white-space: nowrap;
-            z-index: 1001;
-            box-sizing: border-box;
-            margin: 0;
+        }
+
+        .modal-tag:hover {
+            background-color: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
         }
 
         #scrollLoading {
@@ -313,9 +432,14 @@
                     <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                 </svg>
                 <input type="text" class="search-box" id="searchInput" placeholder="Buscar...">
+                <button class="pin-btn" id="pinBtn" title="Fijar búsqueda">
+                    <svg class="pin-icon" viewBox="0 0 24 24">
+                        <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z"/>
+                    </svg>
+                </button>
             </div>
 
-            <div class="search-options">
+            <div class="search-options" id="searchOptions">
                 <div class="option" data-tag="gravity_falls">Gravity Falls</div>
                 <div class="option" data-tag="amphibia">Amphibia</div>
                 <div class="option" data-tag="the_owl_house">The Owl House</div>
@@ -333,6 +457,12 @@
                     <span class="slider"></span>
                 </label>
             </div>
+            
+            <!-- Línea separadora -->
+            <div class="nsfw-separator"></div>
+            
+            <!-- Texto informativo - ACTUALIZADO -->
+            <div class="info-text">ℹ️ toca la imagen que quieras y luego déjala presionada para comenzar la descarga automática</div>
         </div>
     </div>
     
@@ -345,9 +475,27 @@
             <div class="modal-image-container">
                 <img class="modal-image" id="modalImage" src="" alt="">
             </div>
+            
+            <!-- Sección de etiquetas debajo de la imagen - SIN RECUADRO -->
+            <div class="tags-section" id="tagsSection">
+                <div class="tags-header">
+                    <span>
+                        📋 ETIQUETAS DE LA IMAGEN
+                        <span class="tags-count" id="tagsCount">0</span>
+                    </span>
+                </div>
+                <div class="tags-list" id="tagsList">
+                    <!-- Las etiquetas se insertarán aquí -->
+                </div>
+            </div>
         </div>
-        <div class="close-modal" id="closeModal">&times;</div>
-        <div class="download-hint">Deja presionado la imagen para descargar</div>
+        
+        <!-- Botón de flecha para cerrar - MÁS PEQUEÑO -->
+        <div class="close-arrow-btn" id="closeArrowBtn">
+            <svg class="arrow-icon" viewBox="0 0 24 24">
+                <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+            </svg>
+        </div>
     </div>
 
     <script>
@@ -361,13 +509,19 @@
         const scrollLoading = document.getElementById('scrollLoading');
         const imageModal = document.getElementById('imageModal');
         const modalImage = document.getElementById('modalImage');
-        const closeModal = document.getElementById('closeModal');
+        const tagsList = document.getElementById('tagsList');
+        const tagsCount = document.getElementById('tagsCount');
+        const closeArrowBtn = document.getElementById('closeArrowBtn');
+        const pinBtn = document.getElementById('pinBtn');
+        const searchOptions = document.getElementById('searchOptions');
         
         let currentPage = 0;
         let currentTags = '';
         let isFetching = false;
         let endOfAllResults = false;
-        let currentImageUrl = '';
+        let currentImageData = null;
+        let allPosts = [];
+        let savedTags = [];
 
         // Función para guardar el estado del NSFW en localStorage
         function saveNsfwState() {
@@ -380,6 +534,79 @@
             if (savedState !== null) {
                 nsfwToggle.checked = savedState === 'true';
             }
+        }
+
+        // Función para cargar etiquetas guardadas desde localStorage
+        function loadSavedTags() {
+            const saved = localStorage.getItem('gelbooru_saved_tags');
+            if (saved) {
+                savedTags = JSON.parse(saved);
+                renderSavedTags();
+            }
+        }
+
+        // Función para guardar etiquetas en localStorage
+        function saveTagsToStorage() {
+            localStorage.setItem('gelbooru_saved_tags', JSON.stringify(savedTags));
+        }
+
+        // Función para renderizar etiquetas guardadas
+        function renderSavedTags() {
+            // Limpiar solo las etiquetas guardadas (mantener las predefinidas)
+            const predefinedTags = Array.from(searchOptions.querySelectorAll('.option[data-tag]'));
+            searchOptions.innerHTML = '';
+            
+            // Añadir etiquetas predefinidas
+            predefinedTags.forEach(tag => {
+                searchOptions.appendChild(tag);
+            });
+            
+            // Añadir etiquetas guardadas
+            savedTags.forEach(tagData => {
+                const tagElement = document.createElement('div');
+                tagElement.className = 'option';
+                tagElement.textContent = tagData.display;
+                tagElement.dataset.tag = tagData.tag;
+                
+                // Evento para eliminar etiqueta guardada
+                tagElement.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    removeSavedTag(tagData.tag);
+                });
+                
+                // Evento para buscar con la etiqueta
+                tagElement.addEventListener('click', () => {
+                    searchInput.value = tagData.display;
+                    startSearch(tagData.tag);
+                });
+                
+                searchOptions.appendChild(tagElement);
+            });
+        }
+
+        // Función para añadir una etiqueta guardada
+        function addSavedTag(tag, display) {
+            // Verificar si ya existe
+            if (!savedTags.some(t => t.tag === tag)) {
+                savedTags.push({ tag, display });
+                saveTagsToStorage();
+                renderSavedTags();
+                updatePinButtonState(tag);
+            }
+        }
+
+        // Función para eliminar una etiqueta guardada
+        function removeSavedTag(tag) {
+            savedTags = savedTags.filter(t => t.tag !== tag);
+            saveTagsToStorage();
+            renderSavedTags();
+            updatePinButtonState('');
+        }
+
+        // Función para actualizar el estado del botón de fijar
+        function updatePinButtonState(tag) {
+            const isPinned = savedTags.some(t => t.tag === tag);
+            pinBtn.classList.toggle('pinned', isPinned);
         }
 
         // Función de traducción automática y formato
@@ -408,8 +635,12 @@
             }
 
             let finalTags = currentTags;
-            if (nsfwToggle.checked) finalTags += ' rating:explicit';
-            else finalTags += ' rating:general';
+            // SISTEMA MEJORADO: Solo agregar rating:explicit cuando el interruptor está activado
+            // Cuando está desactivado, buscar todo sin restricciones de rating
+            if (nsfwToggle.checked) {
+                finalTags += ' rating:explicit';
+            }
+            // Cuando está desactivado, no agregamos ningún filtro de rating
 
             const url = `https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&tags=${encodeURIComponent(finalTags)}&api_key=${API_KEY}&user_id=${USER_ID}&limit=20&pid=${currentPage}`;
             
@@ -438,18 +669,66 @@
             }
         }
 
+        // Función para formatear etiquetas
+        function formatTag(tag) {
+            return tag.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        // Función para mostrar etiquetas en el modal
+        function displayTags(tagsString) {
+            tagsList.innerHTML = '';
+            
+            if (!tagsString) {
+                tagsList.innerHTML = '<div class="modal-tag">No hay etiquetas disponibles</div>';
+                tagsCount.textContent = '0';
+                return;
+            }
+            
+            const tagsArray = tagsString.split(' ');
+            tagsCount.textContent = tagsArray.length;
+            
+            tagsArray.forEach(tag => {
+                if (tag.trim()) {
+                    const tagElement = document.createElement('div');
+                    tagElement.className = 'modal-tag';
+                    tagElement.textContent = formatTag(tag);
+                    tagElement.title = formatTag(tag);
+                    
+                    // Hacer clic en la etiqueta para buscar
+                    tagElement.addEventListener('click', () => {
+                        closeImageModal();
+                        searchInput.value = formatTag(tag);
+                        startSearch(tag);
+                    });
+                    
+                    tagsList.appendChild(tagElement);
+                }
+            });
+        }
+
         // Función para abrir la imagen en el modal
-        function openImageModal(imageUrl) {
-            currentImageUrl = imageUrl;
-            modalImage.src = imageUrl;
-            imageModal.style.display = 'flex';
-            document.body.style.overflow = 'hidden'; // Previene scroll en fondo
+        function openImageModal(imageData) {
+            currentImageData = imageData;
+            modalImage.src = imageData.imgUrl;
+            imageModal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            
+            // Mostrar etiquetas
+            if (imageData.tags) {
+                displayTags(imageData.tags);
+            } else {
+                displayTags('');
+            }
+            
+            // Desplazar al inicio del modal
+            imageModal.scrollTop = 0;
         }
 
         // Función para cerrar el modal
         function closeImageModal() {
             imageModal.style.display = 'none';
-            document.body.style.overflow = 'auto'; // Restaura scroll
+            document.body.style.overflow = 'auto';
+            currentImageData = null;
         }
 
         async function startSearch(tags, isNewSearch = true) {
@@ -461,14 +740,17 @@
                 currentPage = 0;
                 endOfAllResults = false;
                 resultsContainer.innerHTML = '';
+                allPosts = [];
                 // Usamos la función de traducción para convertir el texto
                 currentTags = await translateAndFormat(tags);
-                console.log('Buscando con tags:', currentTags); // Para depuración
+                console.log('Buscando con tags:', currentTags);
+                updatePinButtonState(currentTags);
             }
 
             const items = await fetchUntilFull(10);
             
             if (items.length > 0) {
+                allPosts = [...allPosts, ...items];
                 renderImages(items);
             } else if (isNewSearch) {
                 resultsContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No se encontró nada.</p>';
@@ -501,9 +783,13 @@
                 };
                 img.onerror = () => card.remove();
                 
-                // Evento para abrir imagen en modal
+                // Evento para abrir imagen en modal con datos completos
                 card.addEventListener('click', () => {
-                    openImageModal(imgUrl);
+                    const imageData = {
+                        imgUrl: imgUrl,
+                        tags: post.tags || ''
+                    };
+                    openImageModal(imageData);
                 });
                 
                 card.appendChild(img);
@@ -523,7 +809,7 @@
                     x: Math.random() * w, y: Math.random() * h,
                     size: Math.random() * 8 + 4,
                     speed: Math.random() * 0.3 + 0.1,
-                    color: Math.random() > 0.5 ? '#1a1a1a' : '#0d0d0d',
+                    color: Math.random() > 0.5 ? '#0a0a0a' : '#050505',
                     opacity: Math.random() * 0.4 + 0.2
                 });
             }
@@ -542,7 +828,7 @@
         }
 
         // Eventos para el modal
-        closeModal.addEventListener('click', closeImageModal);
+        closeArrowBtn.addEventListener('click', closeImageModal);
         
         // Cerrar modal al hacer clic fuera de la imagen
         imageModal.addEventListener('click', (e) => {
@@ -551,10 +837,38 @@
             }
         });
 
+        // Prevenir que el clic en las etiquetas cierre el modal
+        document.getElementById('tagsSection').addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Prevenir que el clic en la imagen cierre el modal
+        modalImage.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
         // Cerrar modal con tecla ESC
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && imageModal.style.display === 'flex') {
+            if (e.key === 'Escape' && imageModal.style.display === 'block') {
                 closeImageModal();
+            }
+        });
+
+        // Evento para fijar búsqueda
+        pinBtn.addEventListener('click', async () => {
+            const searchText = searchInput.value.trim();
+            if (searchText) {
+                const formattedTag = await translateAndFormat(searchText);
+                const displayText = formatTag(formattedTag);
+                
+                // Verificar si ya está guardada
+                const isAlreadySaved = savedTags.some(t => t.tag === formattedTag);
+                
+                if (isAlreadySaved) {
+                    removeSavedTag(formattedTag);
+                } else {
+                    addSavedTag(formattedTag, displayText);
+                }
             }
         });
 
@@ -598,6 +912,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Cargar el estado del NSFW desde localStorage
             loadNsfwState();
+            // Cargar etiquetas guardadas
+            loadSavedTags();
             
             initParticles();
             startSearch('disney');
