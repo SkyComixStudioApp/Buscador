@@ -42,7 +42,7 @@
             z-index: -1;
         }
         
-        .top-bar {
+        .logo-bar {
             background-color: rgba(0, 0, 0, 0.95);
             width: 100%;
             padding: 10px 15px;
@@ -54,7 +54,6 @@
         
         .logo {
             height: 35px;
-            margin-bottom: 12px;
             display: block;
         }
         
@@ -63,7 +62,7 @@
             background-color: rgba(5, 5, 5, 0.95);
             border-radius: 10px;
             padding: 15px;
-            margin-bottom: 12px;
+            margin: 12px 15px;
             border: 1px solid #222;
         }
         
@@ -167,8 +166,9 @@
         .nsfw-box-container {
             background-color: rgba(5, 5, 5, 0.95);
             border-radius: 10px;
-            padding: 12px 15px 10px 15px;
+            padding: 12px 15px;
             border: 1px solid #222;
+            margin: 0 15px 12px 15px;
         }
 
         .filter-row {
@@ -176,7 +176,6 @@
             justify-content: space-between;
             align-items: center;
             padding: 3px 0;
-            margin-bottom: 8px;
         }
 
         .filter-label { 
@@ -224,29 +223,11 @@
         input:checked + .slider { background-color: #ff4d4d; }
         input:checked + .slider:before { transform: translateX(20px); }
         
-        /* Línea separadora debajo del filtro NSFW */
-        .nsfw-separator {
-            width: 100%;
-            height: 1px;
-            background-color: #333;
-            margin: 8px 0 10px 0;
-        }
-        
-        /* Texto informativo - ALINEADO A LA IZQUIERDA Y MÁS GRANDE */
-        .info-text {
-            font-size: 13px;
-            color: #bbb;
-            text-align: left;
-            line-height: 1.4;
-            letter-spacing: 0.3px;
-            padding-left: 2px;
-        }
-        
         /* CUADRÍCULA CON ASPECTO 4:5 - ALINEADA CON RECUADROS */
         .results-wrapper {
             max-width: 970px;
             margin: 0 auto;
-            padding: 0 15px;
+            padding: 0 15px 20px 15px;
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
@@ -270,6 +251,9 @@
             background: linear-gradient(90deg, #0a0a0a 25%, #1a1a1a 50%, #0a0a0a 75%);
             background-size: 200% 100%;
             animation: pulse 1.5s infinite;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
         @keyframes pulse {
@@ -284,9 +268,29 @@
             display: block;
             opacity: 0;
             transition: opacity 0.6s ease;
+            position: relative;
+            z-index: 1;
         }
 
-        .image-result.loaded { opacity: 1; }
+        .image-result.loaded { 
+            opacity: 1; 
+            z-index: 2;
+        }
+        
+        .error-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #111;
+            color: #777;
+            font-size: 12px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 3;
+        }
 
         /* MODAL PARA VISUALIZACIÓN AMPLIADA */
         .image-modal {
@@ -443,58 +447,67 @@
             display: none;
             font-weight: bold;
             text-transform: uppercase;
+            grid-column: 1 / -1;
+        }
+        
+        .load-more-indicator {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+            color: #4a90e2;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .load-more-indicator.active {
+            display: block;
         }
     </style>
 </head>
 <body>
     <canvas id="particles"></canvas>
     
-    <div class="top-bar">
+    <!-- Solo el logo se mantiene fijo -->
+    <div class="logo-bar">
         <img src="https://i.ibb.co/8nbrc06R/1768350301312.png" alt="Logo" class="logo">
-        
-        <!-- Recuadro para buscador y etiquetas -->
-        <div class="search-box-container">
-            <div class="search-container">
-                <svg class="search-icon" viewBox="0 0 24 24">
-                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    </div>
+    
+    <!-- El resto del contenido no es sticky -->
+    <div class="search-box-container">
+        <div class="search-container">
+            <svg class="search-icon" viewBox="0 0 24 24">
+                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+            <input type="text" class="search-box" id="searchInput" placeholder="Buscar...">
+            <button class="pin-btn" id="pinBtn" title="Fijar búsqueda">
+                <svg class="pin-icon" viewBox="0 0 24 24">
+                    <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z"/>
                 </svg>
-                <input type="text" class="search-box" id="searchInput" placeholder="Buscar...">
-                <button class="pin-btn" id="pinBtn" title="Fijar búsqueda">
-                    <svg class="pin-icon" viewBox="0 0 24 24">
-                        <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm0 15l-5-2.18L7 18V5h10v13z"/>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="search-options" id="searchOptions">
-                <div class="option" data-tag="gravity_falls">Gravity Falls</div>
-                <div class="option" data-tag="amphibia">Amphibia</div>
-                <div class="option" data-tag="the_owl_house">The Owl House</div>
-                <div class="option" data-tag="the_simpsons">The Simpsons</div>
-                <div class="option" data-tag="star_vs_the_forces_of_evil">Star vs Evil</div>
-            </div>
+            </button>
         </div>
-        
-        <!-- Recuadro separado para el filtro NSFW -->
-        <div class="nsfw-box-container">
-            <div class="filter-row">
-                <span class="filter-label">MOSTRAR SOLO CONTENIDO +18</span>
-                <label class="switch">
-                    <input type="checkbox" id="nsfwToggle">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            
-            <!-- Línea separadora -->
-            <div class="nsfw-separator"></div>
-            
-            <!-- Texto informativo - ACTUALIZADO -->
-            <div class="info-text">ℹ️  Toca la imagen que quieras y luego déjala presionada para comenzar la descarga automática</div>
+
+        <div class="search-options" id="searchOptions">
+            <div class="option" data-tag="gravity_falls">Gravity Falls</div>
+            <div class="option" data-tag="amphibia">Amphibia</div>
+            <div class="option" data-tag="the_owl_house">The Owl House</div>
+            <div class="option" data-tag="the_simpsons">The Simpsons</div>
+            <div class="option" data-tag="star_vs_the_forces_of_evil">Star vs Evil</div>
+        </div>
+    </div>
+    
+    <div class="nsfw-box-container">
+        <div class="filter-row">
+            <span class="filter-label">MOSTRAR SOLO CONTENIDO +18</span>
+            <label class="switch">
+                <input type="checkbox" id="nsfwToggle">
+                <span class="slider"></span>
+            </label>
         </div>
     </div>
     
     <div class="results-wrapper" id="resultsContainer"></div>
     <div id="scrollLoading">Buscando imágenes...</div>
+    <div class="load-more-indicator" id="loadMoreIndicator">Cargando más imágenes...</div>
 
     <!-- Modal para visualización ampliada -->
     <div class="image-modal" id="imageModal">
@@ -534,6 +547,7 @@
         const resultsContainer = document.getElementById('resultsContainer');
         const nsfwToggle = document.getElementById('nsfwToggle');
         const scrollLoading = document.getElementById('scrollLoading');
+        const loadMoreIndicator = document.getElementById('loadMoreIndicator');
         const imageModal = document.getElementById('imageModal');
         const modalImage = document.getElementById('modalImage');
         const tagsList = document.getElementById('tagsList');
@@ -549,6 +563,8 @@
         let currentImageData = null;
         let allPosts = [];
         let savedTags = [];
+        let autoLoadTimer = null;
+        let isLoadingMore = false;
 
         // Función para guardar el estado del NSFW en localStorage
         function saveNsfwState() {
@@ -758,10 +774,53 @@
             currentImageData = null;
         }
 
+        // Función para iniciar carga automática
+        function startAutoLoad() {
+            if (autoLoadTimer) {
+                clearTimeout(autoLoadTimer);
+            }
+            
+            // Esperar 1 segundo después de la carga inicial para empezar a cargar más
+            autoLoadTimer = setTimeout(async () => {
+                if (!isFetching && !endOfAllResults) {
+                    await loadMoreImages();
+                }
+            }, 1000);
+        }
+
+        // Función para cargar más imágenes automáticamente
+        async function loadMoreImages() {
+            if (isFetching || endOfAllResults || isLoadingMore) return;
+            
+            isLoadingMore = true;
+            loadMoreIndicator.classList.add('active');
+            
+            const items = await fetchUntilFull(10);
+            
+            if (items.length > 0) {
+                allPosts = [...allPosts, ...items];
+                renderImages(items);
+                
+                // Iniciar el temporizador para la siguiente carga automática
+                if (!endOfAllResults) {
+                    startAutoLoad();
+                }
+            }
+            
+            loadMoreIndicator.classList.remove('active');
+            isLoadingMore = false;
+        }
+
         async function startSearch(tags, isNewSearch = true) {
             if (isFetching) return;
             isFetching = true;
             scrollLoading.style.display = 'block';
+            
+            // Detener cualquier carga automática en curso
+            if (autoLoadTimer) {
+                clearTimeout(autoLoadTimer);
+                autoLoadTimer = null;
+            }
 
             if (isNewSearch) {
                 currentPage = 0;
@@ -779,8 +838,13 @@
             if (items.length > 0) {
                 allPosts = [...allPosts, ...items];
                 renderImages(items);
+                
+                // Iniciar carga automática después de cargar las primeras imágenes
+                if (!endOfAllResults) {
+                    startAutoLoad();
+                }
             } else if (isNewSearch) {
-                resultsContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center;">No se encontró nada.</p>';
+                resultsContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #aaa; padding: 40px 0;">No se encontró nada.</p>';
             }
 
             scrollLoading.style.display = 'none';
@@ -803,12 +867,41 @@
                 const img = new Image();
                 img.className = 'image-result';
                 img.src = imgUrl;
+                
+                // Crear placeholder de error
+                const errorPlaceholder = document.createElement('div');
+                errorPlaceholder.className = 'error-placeholder';
+                errorPlaceholder.textContent = 'Error al cargar';
+                errorPlaceholder.style.display = 'none';
+                card.appendChild(errorPlaceholder);
 
                 img.onload = () => {
-                    skeleton.remove();
+                    skeleton.style.display = 'none';
                     img.classList.add('loaded');
+                    errorPlaceholder.style.display = 'none';
                 };
-                img.onerror = () => card.remove();
+                
+                img.onerror = () => {
+                    // Intentar cargar con file_url si sample_url falló
+                    if (post.file_url && (!post.sample_url || imgUrl !== post.file_url)) {
+                        const fallbackUrl = post.file_url.startsWith('http') ? post.file_url : 'https:' + post.file_url;
+                        img.src = fallbackUrl;
+                        return;
+                    }
+                    
+                    // Si ambas URLs fallan, mostrar placeholder
+                    skeleton.style.display = 'none';
+                    errorPlaceholder.style.display = 'flex';
+                    img.style.display = 'none';
+                    
+                    // Intentar recargar después de 5 segundos
+                    setTimeout(() => {
+                        img.src = imgUrl + '?retry=' + Date.now();
+                        img.style.display = 'block';
+                        errorPlaceholder.style.display = 'none';
+                        skeleton.style.display = 'block';
+                    }, 5000);
+                };
                 
                 // Evento para abrir imagen en modal con datos completos
                 card.addEventListener('click', () => {
@@ -896,12 +989,6 @@
                 } else {
                     addSavedTag(formattedTag, displayText);
                 }
-            }
-        });
-
-        window.addEventListener('scroll', () => {
-            if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 800) {
-                startSearch(currentTags, false);
             }
         });
 
